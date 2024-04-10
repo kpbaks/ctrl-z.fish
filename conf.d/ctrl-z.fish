@@ -16,10 +16,38 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
     end
 
     # TODO: What if there is more that one job? Pick the latest, or use fzf to pick?
-    builtin jobs | read job group cpu state command
+    # builtin jobs | read job group cpu state command
     set -l n_jobs_before (builtin jobs | count)
 
-    fg 2>/dev/null
+    set -l reset (set_color normal)
+    set -l red (set_color red)
+    set -l green (set_color green)
+    set -l yellow (set_color yellow)
+    set -l blue (set_color blue)
+    set -l cyan (set_color cyan)
+    set -l magenta (set_color magenta)
+
+    set -l job_id 1
+    if test $n_jobs_before -gt 1
+        # builtin jobs | tail +1 | command gum choose | read selection
+        builtin jobs \
+            | tail +1 \
+            | while read job group cpu state command
+            set -l state_color $red
+            if test $state = running
+                set state_color $green
+            end
+
+            set -l job_id_color $magenta
+            printf '%s%2s%s %s %s %s%s%s %s%s\n' $job_id_color $job $reset $group $cpu $state_color $state $reset (printf (echo $command | fish_indent --ansi)) $reset
+        end | fzf --ansi --height=~40% | string match --regex --groups-only '^(\d+)' | read job_id
+        # echo $selection
+    end
+
+    # TODO: improve fzf style
+    # TODO: handle user pressing escape
+
+    fg %$job_id 2>/dev/null
 
     set -l n_jobs_after (builtin jobs | count)
     if test $n_jobs_before -eq $n_jobs_after
