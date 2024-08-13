@@ -28,8 +28,13 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
     set -l magenta (set_color magenta)
 
     set -l job_id 1
-    if test $n_jobs_before -gt 1
-        # builtin jobs | tail +1 | command gum choose | read selection
+    if test $n_jobs_before -gt 1; and command -q gum
+        # TODO: add border header
+        # TODO: improve fzf style
+        set -l fzf_opts --ansi --height=~40% \
+            --header="<id> | <group> <cpu> <state> | <command>"
+        # TODO: bind ctrl+c to send kill -p to the process
+
         builtin jobs \
             | tail +1 \
             | while read job group cpu state command
@@ -39,13 +44,13 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
             end
 
             set -l job_id_color $magenta
-            printf '%s%2s%s %s %s %s%s%s %s%s\n' $job_id_color $job $reset $group $cpu $state_color $state $reset (printf (echo $command | fish_indent --ansi)) $reset
-        end | fzf --ansi --height=~40% | string match --regex --groups-only '^(\d+)' | read job_id
-        # echo $selection
+
+            printf '%s%2s%s | %s %s %s%s%s | %s%s\n' $job_id_color $job $reset $group $cpu $state_color $state $reset (printf (echo $command | fish_indent --ansi)) $reset
+        end | fzf $fzf_opts | string match --regex --groups-only '^\s*(\d+)' | read job_id
     end
 
-    # TODO: improve fzf style
     # TODO: handle user pressing escape
+    # FIXME: shell freezes if in fzf ui, and user presses ctrl+z or escape
 
     fg %$job_id 2>/dev/null
 
