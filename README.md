@@ -19,6 +19,9 @@ Beyond this, `ctrl-z.fish` provides two features in addition:
 - If more than 1 job is in the background, an interactive picker is opened where you can select which job to bring into the foreground. Various metadata is shown for each job,
 such as its `pgid`, elapsed time or `etime`, and the `cwd` of the job. This information makes it easier to distinguish between similar background jobs, such as multiple open text editors instances.
 
+![image](https://github.com/user-attachments/assets/ac1f8dac-66af-45c2-acde-0feea89853ac)
+
+
 ## Installation
 
 ```fish
@@ -55,6 +58,6 @@ When the event is emitted, the command that was put into the background is passe
 ```fish
 set -l EDITOR hx
 $EDITOR README.md
-# Press ctrl+z to return to the shell prompt
+# Press ctrl-z to return to the shell prompt
 # Then the `-a command` argument will be expanded to `hx README.md`
 ```
