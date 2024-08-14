@@ -1,5 +1,5 @@
 # Makes it easy to toggle between $EDITOR and the terminal/shell
-function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be called directly"
+function __ctrl-z.fish -d "Keybind function for ctrl+z.fish. Not meant to be called directly"
 
     if not builtin jobs --quiet
         set -l reset (set_color normal)
@@ -33,9 +33,10 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
         set -l cpu_color $cyan
         set -l command_color (set_color $fish_color_command)
         set -l pgid_color (set_color white)
+        set -l etime_color $blue
         # --border-label="$(set_color --dim)┤$reset $(set_color blue)ctrl-z.fish$reset $(set_color --dim)├$reset" \
         set -l fzf_opts --ansi --height=~40% \
-            --header="$job_id_color<id>$reset | $pgid_color<pgid>$reset $cpu_color<cpu>$reset $green<state>$reset $cwd_color<cwd>$reset | $command_color<command>$reset" \
+            --header="$job_id_color<id>$reset | $pgid_color<pgid>$reset $cpu_color<cpu>$reset $green<sta$(set_color normal)$(set_color red)te>$reset $etime_color<etime>$reset $cwd_color<cwd>$reset | $command_color<command>$reset" \
             --border-label=" $(set_color blue)ctrl-z.fish$reset " \
             --cycle \
             --no-info \
@@ -56,8 +57,16 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
             end
 
             set -l cwd (path resolve /proc/$pgid/cwd | string replace --regex "^$HOME/" "~/")
+            set -l etime (command ps --pid $pgid --format etime= | string trim)
 
-            printf '%s%2s%s   | %s%s%s  %s%s%s   %s%s%s  %s%s%s | %s%s\n' $job_id_color $job $reset $pgid_color $pgid $reset $cpu_color $cpu $reset $state_color $state $reset $yellow $cwd $reset (printf (echo $command | fish_indent --ansi)) $reset
+            printf '%s%2s%s   | %s%s%s  %s%s%s   %s%s%s  %s%s%s  %s%s%s | %s%s\n' \
+                $job_id_color $job $reset \
+                $pgid_color $pgid $reset \
+                $cpu_color $cpu $reset \
+                $state_color $state $reset \
+                $etime_color $etime $reset \
+                $cwd_color $cwd $reset \
+                (printf (echo $command | fish_indent --ansi)) $reset
 
         end | fzf $fzf_opts | string match --regex --groups-only '^\s*(\d+)' | read job_id
         if test $pipestatus[-3] -eq 130 # see `man fzf` for status codes
@@ -126,5 +135,5 @@ end
 #     # end
 # end
 
-bind \cz '__ctrl+z.fish; commandline --function repaint'
-# bind \cz '__ctrl+z.fish'
+bind \cz '__ctrl-z.fish; commandline --function repaint'
+# bind \cz '__ctrl-z.fish'
