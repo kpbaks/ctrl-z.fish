@@ -16,6 +16,8 @@ Beyond this, `ctrl-z.fish` provides two features in addition:
 
 - A notification is printed to the terminal when you press <kbd>ctrl+z</kbd> and there are no jobs to bring to the foreground.
 - A `ctrl_z_to_bg` event is emitted when you press <kbd>ctrl+z</kbd> in the TUI application and return to the shell prompt. This allows you to create listeners for this event that can be used to run commands when you return to the shell prompt. The rationale is that when you press <kbd>ctrl+z</kbd> you do it because you want to run a quick command in the shell, and then return to the TUI application. So why not automate this?
+- If more than 1 job is in the background, an interactive picker is opened where you can select which job to bring into the foreground. Various metadata is shown for each job,
+such as its `pgid`, elapsed time or `etime`, and the `cwd` of the job. This information makes it easier to distinguish between similar background jobs, such as multiple open text editors instances.
 
 ## Installation
 
@@ -23,19 +25,23 @@ Beyond this, `ctrl-z.fish` provides two features in addition:
 fisher install kpbaks/ctrl-z.fish
 ```
 
+## Dependencies
+
+- [`fzf`](https://github.com/junegunn/fzf) used for the picker widget when there are >1 jobs in the background.
+
 ## Usage
 
 To use the `ctrl_z_to_bg` event, you need to create a listener for it. This can be done as follows:
 
 ```fish
 # Run `cargo check` when you return to the shell prompt in a cargo project
-function __ctrl+z.fish::listener::cargo_check --on-event ctrl_z_to_bg -a command
+function __ctrl-z.fish::listener::cargo_check --on-event ctrl_z_to_bg -a command
     test -f Cargo.toml; or return 0
     cargo check
 end
 
 # Run `git status --short` when you return to the shell prompt in a git repository
-function __ctrl+z.fish::listener::git_status --on-event ctrl_z_to_bg -a command
+function __ctrl-z.fish::listener::git_status --on-event ctrl_z_to_bg -a command
     if command git rev-parse --is-inside-work-tree >/dev/null 2>&1
         command git status --short
     end

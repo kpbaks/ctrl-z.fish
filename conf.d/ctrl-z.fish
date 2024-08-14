@@ -43,7 +43,6 @@ function __ctrl-z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
             --color=label:italic \
             --prompt="select which job to bring into the foreground > " \
             --bind="ctrl-z:close"
-        # --no-separator \
 
         # TODO: bind ctrl+c to send kill -p to the process
         # --bind="ctrl-c:execute-silent(kill -p {1})+refresh-preview"
