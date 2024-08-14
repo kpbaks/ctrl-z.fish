@@ -7,9 +7,8 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
         # https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797#cursor-controls
         printf "\x1b[0G" # Move cursor to the start of the line (0'th column).
         printf "\x1b[2K" # Clear the current line, to erase the leftover (partial) prompt.
-        printf "%shint%s: this keybind, i.e. %s%s%s, only does something, if there are >= 1 background %sjobs%s ;)\n" \
+        printf "%shint%s: this keybind only does something, if there are >= 1 background %sjobs%s ;)\n" \
             (set_color cyan) $reset \
-            $color_command (status function) $reset \
             $color_command $reset
 
         return 1
@@ -29,28 +28,43 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
 
     set -l job_id 1
     if test $n_jobs_before -gt 1; and command -q gum
-        # TODO: add border header
-        # TODO: improve fzf style
+        set -l job_id_color $magenta
+        set -l cwd_color $yellow
+        set -l cpu_color $cyan
+        set -l command_color (set_color $fish_color_command)
+        set -l pgid_color (set_color white)
+        # --border-label="$(set_color --dim)┤$reset $(set_color blue)ctrl-z.fish$reset $(set_color --dim)├$reset" \
         set -l fzf_opts --ansi --height=~40% \
-            --header="<id> | <group> <cpu> <state> | <command>"
+            --header="$job_id_color<id>$reset | $pgid_color<pgid>$reset $cpu_color<cpu>$reset $green<state>$reset $cwd_color<cwd>$reset | $command_color<command>$reset" \
+            --border-label=" $(set_color blue)ctrl-z.fish$reset " \
+            --cycle \
+            --no-info \
+            --color=label:italic \
+            --prompt="select which job to bring into the foreground > " \
+            --bind="ctrl-z:close"
+        # --no-separator \
+
         # TODO: bind ctrl+c to send kill -p to the process
+        # --bind="ctrl-c:execute-silent(kill -p {1})+refresh-preview"
 
         builtin jobs \
             | tail +1 \
-            | while read job group cpu state command
+            | while read job pgid cpu state command
             set -l state_color $red
             if test $state = running
                 set state_color $green
             end
 
-            set -l job_id_color $magenta
+            set -l cwd (path resolve /proc/$pgid/cwd | string replace --regex "^$HOME/" "~/")
 
-            printf '%s%2s%s | %s %s %s%s%s | %s%s\n' $job_id_color $job $reset $group $cpu $state_color $state $reset (printf (echo $command | fish_indent --ansi)) $reset
+            printf '%s%2s%s   | %s%s%s  %s%s%s   %s%s%s  %s%s%s | %s%s\n' $job_id_color $job $reset $pgid_color $pgid $reset $cpu_color $cpu $reset $state_color $state $reset $yellow $cwd $reset (printf (echo $command | fish_indent --ansi)) $reset
+
         end | fzf $fzf_opts | string match --regex --groups-only '^\s*(\d+)' | read job_id
+        if test $pipestatus[-3] -eq 130 # see `man fzf` for status codes
+            # User pressed esc or ctrl-z
+            return
+        end
     end
-
-    # TODO: handle user pressing escape
-    # FIXME: shell freezes if in fzf ui, and user presses ctrl+z or escape
 
     fg %$job_id 2>/dev/null
 
@@ -59,6 +73,8 @@ function __ctrl+z.fish -d "Keybind function for ctrl+z.fish. Not meant to be cal
         # Only emit if sending job back to background, and not exiting the program
         emit ctrl_z_to_bg $command
     end
+
+    commandline --function repaint
 end
 
 # function __ctrl+z.fish::listener::hint_putting_in_foreground --on-event ctrl_z_to_bg -a command
@@ -111,3 +127,4 @@ end
 # end
 
 bind \cz '__ctrl+z.fish; commandline --function repaint'
+# bind \cz '__ctrl+z.fish'
