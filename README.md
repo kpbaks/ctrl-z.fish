@@ -21,7 +21,6 @@ such as its `pgid`, elapsed time or `etime`, and the `cwd` of the job. This info
 
 ![image](https://github.com/user-attachments/assets/ac1f8dac-66af-45c2-acde-0feea89853ac)
 
-
 ## Installation
 
 ```fish
